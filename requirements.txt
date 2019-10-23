@@ -10,3 +10,4 @@ requests
 jsonschema
 Flask-OAuthlib
 pytz
+google-cloud-bigquery==1.18.0
