@@ -68,4 +68,24 @@ with DAG("taipei_etl", default_args=default_args, schedule_interval=None) as dag
         dag=dag,
     )
 
-    mango_events >> mango_events_unnested
+    mango_events_feature_mapping = taipei_etl(
+        "mango_events_feature_mapping",
+        arguments=["--task", "bigquery", "--subtask", "mango_events_feature_mapping"],
+        dag=dag,
+    )
+
+    channel_mapping = taipei_etl(
+        "channel_mapping",
+        arguments=["--task", "bigquery", "--subtask", "channel_mapping"],
+        dag=dag,
+    )
+
+    user_channels = taipei_etl(
+        "user_channels",
+        arguments=["--task", "bigquery", "--subtask", "user_channels"],
+        dag=dag,
+    )
+
+    mango_events >> mango_events_unnested >> mango_events_feature_mapping
+    mango_events >> user_channels
+    channel_mapping >> user_channels
