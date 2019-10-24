@@ -62,16 +62,10 @@ with DAG("taipei_etl", default_args=default_args, schedule_interval=None) as dag
         dag=dag,
     )
 
-    mango_events_unnested = taipei_etl(
-        "mango_events_unnested",
-        arguments=["--task", "bigquery", "--subtask", "mango_events_unnested"],
-        dag=dag,
-    )
+    mango_events_unnested = DummyOperator(task_id="mango_events_unnested", dag=dag)
 
-    mango_events_feature_mapping = taipei_etl(
-        "mango_events_feature_mapping",
-        arguments=["--task", "bigquery", "--subtask", "mango_events_feature_mapping"],
-        dag=dag,
+    mango_events_feature_mapping = DummyOperator(
+        task_id="mango_events_feature_mapping", dag=dag
     )
 
     channel_mapping = taipei_etl(
@@ -80,11 +74,7 @@ with DAG("taipei_etl", default_args=default_args, schedule_interval=None) as dag
         dag=dag,
     )
 
-    user_channels = taipei_etl(
-        "user_channels",
-        arguments=["--task", "bigquery", "--subtask", "user_channels"],
-        dag=dag,
-    )
+    user_channels = DummyOperator(task_id="user_channels", dag=dag)
 
     mango_events >> mango_events_unnested >> mango_events_feature_mapping
     mango_events >> user_channels
