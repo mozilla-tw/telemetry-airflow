@@ -14,7 +14,6 @@ default_args = {
     "email_on_retry": False,
     "retries": 0,
     "retry_delay": timedelta(minutes=30),
-    "catchup": True,
 }
 
 
@@ -52,7 +51,12 @@ def taipei_etl(
     )
 
 
-with DAG("taipei_etl", default_args=default_args, schedule_interval=None) as dag:
+with DAG(
+    "taipei_etl",
+    default_args=default_args,
+    schedule_interval="0 23 * * *",
+    catchup=True,
+) as dag:
 
     gcp_conn_id = "google_cloud_derived_datasets"
     connection = GoogleCloudBaseHook(gcp_conn_id=gcp_conn_id)
