@@ -8,12 +8,13 @@ from operators.gcp_container_operator import GKEPodOperator
 default_args = {
     "owner": "elin@mozilla.com",
     "depends_on_past": False,
-    "start_date": datetime(2018, 11, 26),
+    "start_date": datetime(2019, 9, 1),
     "email": ["elin@mozilla.com"],
     "email_on_failure": False,
     "email_on_retry": False,
     "retries": 0,
     "retry_delay": timedelta(minutes=30),
+    "catchup": True,
 }
 
 
