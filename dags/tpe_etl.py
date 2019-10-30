@@ -61,26 +61,39 @@ with DAG(
     gcp_conn_id = "google_cloud_derived_datasets"
     connection = GoogleCloudBaseHook(gcp_conn_id=gcp_conn_id)
 
+    adjust = taipei_etl("adjust", arguments=["--task", "adjust"], dag=dag)
+
     mango_events = taipei_etl(
         "mango_events",
         arguments=["--task", "bigquery", "--subtask", "mango_events"],
         dag=dag,
     )
 
-    mango_events_unnested = DummyOperator(task_id="mango_events_unnested", dag=dag)
-
-    mango_events_feature_mapping = DummyOperator(
-        task_id="mango_events_feature_mapping", dag=dag
-    )
-
-    channel_mapping = taipei_etl(
-        "channel_mapping",
-        arguments=["--task", "bigquery", "--subtask", "channel_mapping"],
+    mango_events_unnested = taipei_etl(
+        "mango_events_unnested",
+        arguments=["--task", "bigquery", "--subtask", "mango_events_unnested"],
         dag=dag,
     )
 
-    user_channels = DummyOperator(task_id="user_channels", dag=dag)
+    mango_events_feature_mapping = taipei_etl(
+        "mango_events_feature_mapping",
+        arguments=["--task", "bigquery", "--subtask", "mango_events_feature_mapping"],
+        dag=dag,
+    )
+
+    mango_channel_mapping = taipei_etl(
+        "mango_channel_mapping",
+        arguments=["--task", "bigquery", "--subtask", "mango_channel_mapping"],
+        dag=dag,
+    )
+
+    mango_user_channels = taipei_etl(
+        "mango_user_channels",
+        arguments=["--task", "bigquery", "--subtask", "mango_user_channels"],
+        dag=dag,
+    )
+
+    [mango_events, mango_channel_mapping] >> mango_user_channels
 
     mango_events >> mango_events_unnested >> mango_events_feature_mapping
-    mango_events >> user_channels
-    channel_mapping >> user_channels
+    adjust >> mango_channel_mapping
