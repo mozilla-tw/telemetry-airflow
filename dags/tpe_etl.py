@@ -63,6 +63,18 @@ with DAG(
 
     adjust = taipei_etl("adjust", arguments=["--task", "adjust"], dag=dag)
 
+    mango_core = taipei_etl(
+        "mango_core",
+        arguments=["--task", "bigquery", "--subtask", "mango_core"],
+        dag=dag,
+    )
+
+    mango_core_normalized = taipei_etl(
+        "mango_core_normalized",
+        arguments=["--task", "bigquery", "--subtask", "mango_core_normalized"],
+        dag=dag,
+    )
+
     mango_events = taipei_etl(
         "mango_events",
         arguments=["--task", "bigquery", "--subtask", "mango_events"],
@@ -93,7 +105,72 @@ with DAG(
         dag=dag,
     )
 
+    mango_user_rfe_partial = taipei_etl(
+        "mango_user_rfe_partial",
+        arguments=["--task", "bigquery", "--subtask", "mango_user_rfe_partial"],
+        dag=dag,
+    )
+
+    mango_user_rfe_session = taipei_etl(
+        "mango_user_rfe_session",
+        arguments=["--task", "bigquery", "--subtask", "mango_user_rfe_session"],
+        dag=dag,
+    )
+
+    mango_user_rfe = taipei_etl(
+        "mango_user_rfe",
+        arguments=["--task", "bigquery", "--subtask", "mango_user_rfe"],
+        dag=dag,
+    )
+
+    mango_feature_cohort_date = taipei_etl(
+        "mango_feature_cohort_date",
+        arguments=["--task", "bigquery", "--subtask", "mango_feature_cohort_date"],
+        dag=dag,
+    )
+
+    mango_user_occurrence = taipei_etl(
+        "mango_user_occurrence",
+        arguments=["--task", "bigquery", "--subtask", "mango_user_occurrence"],
+        dag=dag,
+    )
+
+    mango_user_feature_occurrence = taipei_etl(
+        "mango_user_feature_occurrence",
+        arguments=["--task", "bigquery", "--subtask", "mango_user_feature_occurrence"],
+        dag=dag,
+    )
+
+    mango_cohort_user_occurrence = taipei_etl(
+        "mango_cohort_user_occurrence",
+        arguments=["--task", "bigquery", "--subtask", "mango_cohort_user_occurrence"],
+        dag=dag,
+    )
+
+    mango_cohort_retained_users = taipei_etl(
+        "mango_cohort_retained_users",
+        arguments=["--task", "bigquery", "--subtask", "mango_cohort_retained_users"],
+        dag=dag,
+    )
+
     [mango_events, mango_channel_mapping] >> mango_user_channels
 
     mango_events >> mango_events_unnested >> mango_events_feature_mapping
     adjust >> mango_channel_mapping
+
+    mango_events_feature_mapping >> [
+        mango_user_rfe_session,
+        mango_user_rfe_partial,
+    ] >> mango_user_rfe
+
+    mango_core >> mango_core_normalized
+    mango_core_normalized >> mango_user_rfe_partial
+
+    mango_events_feature_mapping >> mango_feature_cohort_date >> mango_user_feature_occurrence
+    mango_events_feature_mapping >> mango_user_feature_occurrence
+    mango_core_normalized >> mango_user_occurrence
+    [
+        mango_user_feature_occurrence,
+        mango_user_occurrence,
+    ] >> mango_cohort_user_occurrence >> mango_cohort_retained_users
+
