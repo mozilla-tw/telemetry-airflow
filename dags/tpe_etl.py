@@ -51,9 +51,7 @@ def taipei_etl(
 
 
 with DAG(
-    "taipei_etl",
-    default_args=default_args,
-    schedule_interval="0 23 * * *",
+    "taipei_etl", default_args=default_args, schedule_interval="0 23 * * *"
 ) as dag:
 
     gcp_conn_id = "google_cloud_derived_datasets"
@@ -170,5 +168,6 @@ with DAG(
     [
         mango_user_feature_occurrence,
         mango_user_occurrence,
+        mango_user_channels,
     ] >> mango_cohort_user_occurrence >> mango_cohort_retained_users
 
