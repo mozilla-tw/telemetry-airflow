@@ -40,6 +40,7 @@ def taipei_etl(
         image=image,
         image_pull_policy=image_pull_policy,
         arguments=[
+            "--debug",
             "--date",
             "{{ds}}",
             "--next_execution_date",
@@ -51,7 +52,7 @@ def taipei_etl(
 
 
 with DAG(
-    "taipei_etl",
+    "taipei_etl-staging",
     default_args=default_args,
     schedule_interval="0 23 * * *",
 ) as dag:
