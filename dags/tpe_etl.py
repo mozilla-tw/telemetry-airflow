@@ -55,7 +55,6 @@ with DAG(
     "taipei_etl",
     default_args=default_args,
     schedule_interval="0 23 * * *",
-    catchup=True,
 ) as dag:
 
     gcp_conn_id = "google_cloud_derived_datasets"
