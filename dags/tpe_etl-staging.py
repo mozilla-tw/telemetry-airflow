@@ -25,7 +25,7 @@ def taipei_etl(
     cluster_name="bq-load-gke-1",
     name="tapei-etl",
     namespace="default",
-    image="gcr.io/rocket-dev01/taipei-bi-etl",
+    image="gcr.io/taipei-bi/taipei-bi-etl",
     image_pull_policy="Always",
     arguments=[],
     **kwargs,
