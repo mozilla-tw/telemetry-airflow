@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.contrib.hooks.gcp_api_base_hook import GoogleCloudBaseHook
+from airflow.contrib.kubernetes.secret import Secret
 from airflow.operators.dummy_operator import DummyOperator
 from operators.gcp_container_operator import GKEPodOperator
 
@@ -57,7 +58,12 @@ with DAG(
     gcp_conn_id = "google_cloud_derived_datasets"
     connection = GoogleCloudBaseHook(gcp_conn_id=gcp_conn_id)
 
-    adjust = taipei_etl("adjust", arguments=["--task", "adjust"], dag=dag)
+    adjust = taipei_etl(
+        "adjust",
+        arguments=["--task", "adjust"],
+        dag=dag,
+        secrets=[Secret("env", "ADJUST_API_KEY", "adjust-api-key", "ADJUST_API_KEY")],
+    )
 
     mango_core = taipei_etl(
         "mango_core",
