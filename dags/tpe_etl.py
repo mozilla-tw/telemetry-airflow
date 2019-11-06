@@ -164,6 +164,7 @@ with DAG(
         mango_user_rfe_session,
         mango_user_rfe_partial,
     ] >> mango_user_rfe
+    mango_core_normalized >> mango_user_rfe
 
     mango_core >> mango_core_normalized
     mango_core_normalized >> mango_user_rfe_partial
