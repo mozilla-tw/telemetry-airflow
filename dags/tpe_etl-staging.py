@@ -41,7 +41,8 @@ def taipei_etl(
         image=image,
         image_pull_policy=image_pull_policy,
         arguments=[
-            "--debug",
+            "--config",
+            "staging",
             "--date",
             "{{ds}}",
             "--next_execution_date",
