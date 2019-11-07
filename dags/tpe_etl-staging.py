@@ -8,7 +8,7 @@ from operators.gcp_container_operator import GKEPodOperator
 
 default_args = {
     "owner": "elin@mozilla.com",
-    "depends_on_past": False,
+    "depends_on_past": True,
     "start_date": datetime(2019, 9, 1),
     "email": ["elin@mozilla.com"],
     "email_on_failure": False,
