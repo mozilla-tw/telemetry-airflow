@@ -160,6 +160,34 @@ with DAG(
         dag=dag,
     )
 
+    mango_feature_active_new_user_count = taipei_etl(
+        "mango_feature_active_new_user_count",
+        arguments=[
+            "--task",
+            "bigquery",
+            "--subtask",
+            "mango_feature_active_new_user_count",
+        ],
+        dag=dag,
+    )
+
+    mango_feature_active_user_count = taipei_etl(
+        "mango_feature_active_user_count",
+        arguments=[
+            "--task",
+            "bigquery",
+            "--subtask",
+            "mango_feature_active_user_count",
+        ],
+        dag=dag,
+    )
+
+    mango_feature_roi = taipei_etl(
+        "mango_feature_roi",
+        arguments=["--task", "bigquery", "--subtask", "mango_feature_roi"],
+        dag=dag,
+    )
+
     [mango_events, mango_channel_mapping] >> mango_user_channels
 
     mango_events >> mango_events_unnested >> mango_events_feature_mapping
@@ -170,6 +198,7 @@ with DAG(
         mango_user_rfe_partial,
     ] >> mango_user_rfe
     mango_core_normalized >> mango_user_rfe
+    mango_channel_mapping >> mango_user_rfe
 
     mango_core >> mango_core_normalized
     mango_core_normalized >> mango_user_rfe_partial
@@ -181,5 +210,16 @@ with DAG(
         mango_user_feature_occurrence,
         mango_user_occurrence,
         mango_user_channels,
-    ] >> mango_cohort_user_occurrence >> mango_cohort_retained_users
+    ] >> mango_cohort_user_occurrence
+
+    mango_cohort_user_occurrence >> mango_cohort_retained_users
+    mango_cohort_user_occurrence >> mango_feature_active_new_user_count
+    mango_cohort_user_occurrence >> mango_feature_active_user_count
+
+    [
+        mango_user_rfe,
+        mango_cohort_retained_users,
+        mango_feature_active_new_user_count,
+        mango_feature_active_user_count,
+    ] >> mango_feature_roi
 
