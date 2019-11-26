@@ -78,7 +78,7 @@ class GKEPodOperator(GKEPodOperator):
         else:
             # Write service account JSON to secure file for gcloud to reference
             service_key = tempfile.NamedTemporaryFile(delete=False)
-            service_key.write(keyfile_json_str)
+            service_key.write(keyfile_json_str.encode('utf-8'))
             os.environ[G_APP_CRED] = service_key.name
             os.environ[GCLOUD_APP_CRED] = service_key.name
             service_key.close()
