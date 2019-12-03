@@ -20,12 +20,12 @@ default_args = {
 
 def taipei_etl(
     task_id,
-    gcp_conn_id="google_cloud_derived_datasets",
-    location="us-central1-a",
-    cluster_name="bq-load-gke-1",
-    name="tapei-etl",
-    namespace="default",
-    image="gcr.io/taipei-bi/taipei-bi-etl",
+    gcp_conn_id="google_cloud_derived_datasets",    # same one in airflow web UI(composer) admin -> connection setting
+    location="us-central1-a",                       # same location as the GKE cluster
+    cluster_name="bq-load-gke-1",                   # same name when creating GKE cluster
+    name="tapei-etl",                               # used for kubernetes job ID, no need to change
+    namespace="default",                            # same namespace when creating GKE cluster
+    image="gcr.io/taipei-bi/taipei-bi-etl",         # reference the image tag you pushed to GCR
     image_pull_policy="Always",
     arguments=[],
     **kwargs,
@@ -54,7 +54,7 @@ def taipei_etl(
 
 
 with DAG(
-    "taipei_etl-staging",
+    "taipei_etl-staging",   # used in airflow web ui to identify tasks, can have multiple DAGs in one python file
     catchup=False,
     default_args=default_args,
     schedule_interval="0 23 * * *",
