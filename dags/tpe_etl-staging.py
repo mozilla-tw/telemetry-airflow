@@ -68,6 +68,7 @@ with DAG(
         arguments=["--task", "adjust"],
         dag=dag,
         secrets=[Secret("env", "ADJUST_API_KEY", "adjust-api-key", "ADJUST_API_KEY")],
+        # Secret("env", {local env var name}, {secret name}, {env var name in secret})
     )
 
     mango_core = taipei_etl(
