@@ -23,7 +23,7 @@ def taipei_etl(
     gcp_conn_id="google_cloud_derived_datasets",    # same one in airflow web UI(composer) admin -> connection setting
     location="us-central1-a",                       # same location as the GKE cluster
     cluster_name="bq-load-gke-1",                   # same name when creating GKE cluster
-    name="tapei-etl",                               # used for kubernetes job ID, no need to change
+    name="taipei-etl",                               # used for kubernetes job ID, no need to change
     namespace="default",                            # same namespace when creating GKE cluster
     image="gcr.io/taipei-bi/taipei-bi-etl",         # reference the image tag you pushed to GCR
     image_pull_policy="Always",
@@ -40,6 +40,7 @@ def taipei_etl(
         namespace=namespace,
         image=image,
         image_pull_policy=image_pull_policy,
+        startup_timeout_seconds=300,
         arguments=[
             "--config",
             "staging",
@@ -54,7 +55,7 @@ def taipei_etl(
 
 
 with DAG(
-    "taipei_etl-staging",   # used in airflow web ui to identify tasks, can have multiple DAGs in one python file
+    "taipei_etl-staging",   # used in airflow web ui/command line to identify tasks, can have multiple DAGs in one python file
     catchup=False,
     default_args=default_args,
     schedule_interval="0 23 * * *",
@@ -136,13 +137,13 @@ with DAG(
         arguments=["--task", "bigquery", "--subtask", "mango_feature_cohort_date"],
         dag=dag,
     )
-
-    mango_user_occurrence = taipei_etl(
-        "mango_user_occurrence",
-        arguments=["--task", "bigquery", "--subtask", "mango_user_occurrence"],
+    #deprecated
+    mango_user_occurrence = DummyOperator(
+        task_id="mango_user_occurrence",
+        # arguments=["--task", "bigquery", "--subtask", "mango_user_occurrence"],
         dag=dag,
     )
-
+    #merge with user_occurrence
     mango_user_feature_occurrence = taipei_etl(
         "mango_user_feature_occurrence",
         arguments=["--task", "bigquery", "--subtask", "mango_user_feature_occurrence"],
@@ -161,24 +162,37 @@ with DAG(
         dag=dag,
     )
 
-    mango_feature_active_new_user_count = taipei_etl(
-        "mango_feature_active_new_user_count",
-        arguments=[
-            "--task",
-            "bigquery",
-            "--subtask",
-            "mango_feature_active_new_user_count",
-        ],
+    #deprecated
+    mango_feature_active_new_user_count = DummyOperator(
+        task_id="mango_feature_active_new_user_count",
+        # arguments=[
+        #     "--task",
+        #     "bigquery",
+        #     "--subtask",
+        #     "mango_feature_active_new_user_count",
+        # ],
         dag=dag,
     )
 
-    mango_feature_active_user_count = taipei_etl(
-        "mango_feature_active_user_count",
+    #deprecated, merge with active new user count
+    mango_feature_active_user_count = DummyOperator(
+        task_id="mango_feature_active_user_count",
+        # arguments=[
+        #     "--task",
+        #     "bigquery",
+        #     "--subtask",
+        #     "mango_feature_active_user_count",
+        # ],
+        dag=dag,
+    )
+
+    mango_active_user_count = taipei_etl(
+        "mango_active_user_count",
         arguments=[
             "--task",
             "bigquery",
             "--subtask",
-            "mango_feature_active_user_count",
+            "mango_active_user_count",
         ],
         dag=dag,
     )
@@ -198,29 +212,29 @@ with DAG(
         mango_user_rfe_session,
         mango_user_rfe_partial,
     ] >> mango_user_rfe
-    mango_core_normalized >> mango_user_rfe
-    mango_channel_mapping >> mango_user_rfe
+    mango_events >> mango_user_rfe
+    mango_user_channels >> mango_user_rfe
 
     mango_core >> mango_core_normalized
-    mango_core_normalized >> mango_user_rfe_partial
+    mango_feature_cohort_date >> mango_user_rfe_partial
+    mango_core_normalized >> mango_user_rfe_session
 
     mango_events_feature_mapping >> mango_feature_cohort_date >> mango_user_feature_occurrence
     mango_events_feature_mapping >> mango_user_feature_occurrence
-    mango_core_normalized >> mango_user_occurrence
+
     [
         mango_user_feature_occurrence,
-        mango_user_occurrence,
         mango_user_channels,
     ] >> mango_cohort_user_occurrence
 
     mango_cohort_user_occurrence >> mango_cohort_retained_users
-    mango_cohort_user_occurrence >> mango_feature_active_new_user_count
-    mango_cohort_user_occurrence >> mango_feature_active_user_count
+
+    mango_cohort_user_occurrence >> mango_active_user_count
 
     [
         mango_user_rfe,
         mango_cohort_retained_users,
-        mango_feature_active_new_user_count,
-        mango_feature_active_user_count,
+        mango_active_user_count,
     ] >> mango_feature_roi
+
 
