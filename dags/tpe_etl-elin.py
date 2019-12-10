@@ -25,10 +25,10 @@ def taipei_etl(
     cluster_name="bq-load-gke-1",                   # same name when creating GKE cluster
     name="taipei-etl",                               # used for kubernetes job ID, no need to change
     namespace="default",                            # same namespace when creating GKE cluster
-    image="gcr.io/taipei-bi/taipei-bi-etl",         # reference the image tag you pushed to GCR
+    image="gcr.io/rocket-dev01/taipei-bi-etl",         # reference the image tag you pushed to GCR
     image_pull_policy="Always",
     arguments=[],
-    **kwargs,
+    **kwargs
 ):
     return GKEPodOperator(
         task_id=task_id,
@@ -43,27 +43,26 @@ def taipei_etl(
         startup_timeout_seconds=300,
         arguments=[
             "--config",
-            "staging",     # MUST verify
+            "debug",       # MUST verify
             "--date",
             "{{ds}}",
             "--next_execution_date",
             "{{next_execution_date}}",
         ]
         + arguments,
-        **kwargs,
+        **kwargs
     )
 
 
 with DAG(
-    "taipei_etl-staging",   # used in airflow web ui/command line to identify tasks, can have multiple DAGs in one python file
+    "taipei_etl-elin",      # used in airflow web ui to identify tasks, can have multiple DAGs in one python file
     catchup=False,
     default_args=default_args,
-    schedule_interval="0 23 * * *",
+    schedule_interval="0 23 * * *"
 ) as dag:
 
     gcp_conn_id = "google_cloud_derived_datasets"
     connection = GoogleCloudBaseHook(gcp_conn_id=gcp_conn_id)
-
     adjust = taipei_etl(
         "adjust",
         arguments=["--task", "adjust"],
@@ -236,5 +235,3 @@ with DAG(
         mango_cohort_retained_users,
         mango_active_user_count,
     ] >> mango_feature_roi
-
-
