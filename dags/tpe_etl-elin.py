@@ -235,7 +235,10 @@ with DAG(
 
     mango_core >> mango_core_normalized
     mango_feature_cohort_date >> mango_user_rfe_partial
-    mango_core_normalized >> mango_user_rfe_session
+    mango_core_normalized >> [
+        mango_user_rfe_session,
+        mango_revenue_google,
+    ]
 
     mango_events_feature_mapping >> mango_feature_cohort_date >> mango_user_feature_occurrence
     mango_events_feature_mapping >> mango_user_feature_occurrence
