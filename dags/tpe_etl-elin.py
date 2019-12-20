@@ -8,7 +8,7 @@ from operators.gcp_container_operator import GKEPodOperator
 
 default_args = {
     "owner": "elin@mozilla.com",
-    "depends_on_past": True,
+    "depends_on_past": False,
     "start_date": datetime(2019, 9, 1),
     "email": ["elin@mozilla.com"],
     "email_on_failure": False,
@@ -68,6 +68,7 @@ with DAG(
         arguments=["--task", "adjust"],
         dag=dag,
         secrets=[Secret("env", "ADJUST_API_KEY", "adjust-api-key", "ADJUST_API_KEY")],
+        depends_on_past=True,
         # Secret("env", {local env var name}, {secret name}, {env var name in secret})
     )
 
@@ -105,12 +106,14 @@ with DAG(
         "mango_channel_mapping",
         arguments=["--task", "bigquery", "--subtask", "mango_channel_mapping"],
         dag=dag,
+        depends_on_past=True,
     )
 
     mango_user_channels = taipei_etl(
         "mango_user_channels",
         arguments=["--task", "bigquery", "--subtask", "mango_user_channels"],
         dag=dag,
+        depends_on_past=True,
     )
 
     mango_user_rfe_partial = taipei_etl(
@@ -123,6 +126,7 @@ with DAG(
         "mango_user_rfe_session",
         arguments=["--task", "bigquery", "--subtask", "mango_user_rfe_session"],
         dag=dag,
+        depends_on_past=True,
     )
 
     mango_user_rfe = taipei_etl(
@@ -135,6 +139,7 @@ with DAG(
         "mango_feature_cohort_date",
         arguments=["--task", "bigquery", "--subtask", "mango_feature_cohort_date"],
         dag=dag,
+        depends_on_past=True,
     )
     #deprecated
     mango_user_occurrence = DummyOperator(
@@ -159,6 +164,7 @@ with DAG(
         "mango_cohort_retained_users",
         arguments=["--task", "bigquery", "--subtask", "mango_cohort_retained_users"],
         dag=dag,
+        depends_on_past=True,
     )
 
     #deprecated
@@ -194,11 +200,24 @@ with DAG(
             "mango_active_user_count",
         ],
         dag=dag,
+        depends_on_past=True,
     )
 
     mango_feature_roi = taipei_etl(
         "mango_feature_roi",
         arguments=["--task", "bigquery", "--subtask", "mango_feature_roi"],
+        dag=dag,
+    )
+
+    mango_channel_roi = taipei_etl(
+        "mango_channel_roi",
+        arguments=["--task", "bigquery", "--subtask", "mango_channel_roi"],
+        dag=dag,
+    )
+
+    mango_revenue_google = taipei_etl(
+        "mango_revenue_google",
+        arguments=["--task", "bigquery", "--subtask", "mango_revenue_google"],
         dag=dag,
     )
 
@@ -235,3 +254,10 @@ with DAG(
         mango_cohort_retained_users,
         mango_active_user_count,
     ] >> mango_feature_roi
+
+    [
+        mango_user_rfe,
+        mango_cohort_retained_users,
+        mango_active_user_count,
+    ] >> mango_channel_roi
+
